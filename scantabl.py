@@ -7,17 +7,22 @@ im = cv.imread(sys.argv[1], 1)
 # binary imagine
 gray = cv.cvtColor(im, cv.COLOR_RGB2GRAY)
 blur = cv.blur(gray, (3, 3))
-ibin = cv.threshold(blur, 127, 255, cv.THRESH_OTSU)[1]
-rows, cols = ibin.shape
-res = cv.resize(ibin, None, fx = 780. / cols, fy = 220. / rows, interpolation = cv.INTER_CUBIC)
-# cv.imshow("res", res)
-# cv.waitKey()
+rows, cols = blur.shape
+res = cv.resize(blur, None, fx = 780. / cols, fy = 220. / rows, interpolation = cv.INTER_CUBIC)
+# for i in range(20):
+# 	for j in range(20):
+# 		imgpart = res[11 * i : 11 * (i + 1), 39 * j : 39 * (j + 1)]
+# 		binpart = cv.threshold(imgpart, 127, 255, cv.THRESH_OTSU)[1]
+# 		res[11 * i : 11 * (i + 1), 39 * j : 39 * (j + 1)] = binpart
+ibin = cv.threshold(res, 127, 255, cv.THRESH_OTSU)[1]
+cv.imshow("ibin", ibin)
+cv.waitKey()
 
 # get matrix
 field = [[0] * 780 for i in range(220)]
 for i in range(780):
 	for j in range(220):
-		if res[j, i] == 0:
+		if ibin[j, i] == 0:
 			field[j][i] = 1
 
 # find 4 rectangles
@@ -126,7 +131,7 @@ for i in range(len(rect4)):
 pts1 = np.float32([[rect1x, rect1y], [rect3x, rect3y], [rect2x, rect2y], [rect4x, rect4y]])
 pts2 = np.float32([[0, 0], [780, 0],[0, 220], [780, 220]])
 M = cv.getPerspectiveTransform(pts1, pts2)
-dst = cv.warpPerspective(res, M, (780, 220))
+dst = cv.warpPerspective(ibin, M, (780, 220))
 cv.imshow("dst", dst)
 cv.waitKey()
 
@@ -179,27 +184,9 @@ for k in range(8):
 			massive[l][k] = "+"
 		else:
 			massive[l][k] = "-"
-# for i in range(len(massive)):
-# 	print massive[i]
 
 # make file with pluses
 with open('conduit.csv', 'w') as f_write:
-	for i in range(8):
+	f_write.write("spreadsheet number " + str(1) + '\n')
+	for i in range(10):
 		f_write.write(" ".join(map(str, massive[i])) + '\n')
-
-# # make massive with pluses
-# massive = [[0] * 8 for i in range(10)]
-# for k in range(8):
-# 	for l in range(10):
-# 		area = [[0] * 75 for i in range(20)]
-# 		for i in range(75):
-# 			for j in range(20):
-# 				area[j][i] = fieldnew[20 + 20 * l + j][180 + 75 * k + i]
-# 		counter = 0
-# 		for i in range(4, 75 - 4):
-# 			for j in range(4, 20 - 4):
-# 				if area[j][i] == 1:
-# 					counter += 1
-# 		if counter >= 5:
-# 			massive[l][k] = 1
-# print " ".join(map(str, massive))

@@ -15,8 +15,8 @@ res = cv.resize(blur, None, fx = 780. / cols, fy = 220. / rows, interpolation = 
 # 		binpart = cv.threshold(imgpart, 127, 255, cv.THRESH_OTSU)[1]
 # 		res[11 * i : 11 * (i + 1), 39 * j : 39 * (j + 1)] = binpart
 ibin = cv.threshold(res, 127, 255, cv.THRESH_OTSU)[1]
-cv.imshow("ibin", ibin)
-cv.waitKey()
+# cv.imshow("ibin", ibin)
+# cv.waitKey()
 
 # get matrix
 field = [[0] * 780 for i in range(220)]
@@ -126,14 +126,20 @@ for i in range(len(rect4)):
 # print rect2x, rect2y
 # print rect3x, rect3y
 # print rect4x, rect4y
+ibin = cv.rectangle(ibin, (rect1x - 2, rect1y - 2), (rect1x + 2, rect1y + 2), (0, 250, 0), 3)
+ibin = cv.rectangle(ibin, (rect2x - 2, rect2y - 2), (rect2x + 2, rect2y + 2), (0, 250, 0), 3)
+ibin = cv.rectangle(ibin, (rect3x - 2, rect3y - 2), (rect3x + 2, rect3y + 2), (0, 250, 0), 3)
+ibin = cv.rectangle(ibin, (rect4x - 2, rect4y - 2), (rect4x + 2, rect4y + 2), (0, 250, 0), 3)
+# cv.imshow("ibin", ibin)
+# cv.waitKey()
 
 # perspective transformation
 pts1 = np.float32([[rect1x, rect1y], [rect3x, rect3y], [rect2x, rect2y], [rect4x, rect4y]])
 pts2 = np.float32([[0, 0], [780, 0],[0, 220], [780, 220]])
 M = cv.getPerspectiveTransform(pts1, pts2)
 dst = cv.warpPerspective(ibin, M, (780, 220))
-cv.imshow("dst", dst)
-cv.waitKey()
+# cv.imshow("dst", dst)
+# cv.waitKey()
 
 # get matrix
 fieldnew = [[0] * 780 for i in range(220)]
@@ -146,21 +152,23 @@ for i in range(780):
 lineshor = []
 for k in range(10):
 	maxcount = 0
-	for i in range(20):
+	for i in range(20 + 20 * k - 5, 20 + 20 * k + 5):
 		counter = 0
 		for j in range(780):
-			counter += fieldnew[10 + 20 * k + i][j]
+			counter += fieldnew[i][j]
 		if counter > maxcount:
 			maxcount = counter
-			maxline = 10 + 20 * k + i
+			maxline = i
 	lineshor.append(maxline)
 lineshor.append(220)
+# for i in range(len(lineshor)):
+# 	dst = cv.rectangle(dst, (0, lineshor[i] - 3), (3, lineshor[i]), (0, 250, 0), 3)
 # print lineshor
 
 linesvert = []
 for k in range(8):
 	maxcount = 0
-	for j in range(180 + 75 * k - 35, 180 + 75 * k + 35):
+	for j in range(180 + 75 * k - 10, 180 + 75 * k + 10):
 		counter = 0
 		for i in range(220):
 			counter += fieldnew[i][j]
@@ -169,7 +177,11 @@ for k in range(8):
 			maxline = j
 	linesvert.append(maxline)
 linesvert.append(780)
+for i in range(len(linesvert)):
+	dst = cv.rectangle(dst, (linesvert[i] - 3, 0), (linesvert[i], 3), (0, 250, 0), 3)
 # print linesvert
+# cv.imshow("dstnew", dst)
+# cv.waitKey()
 
 # make massive with pluses (new)
 massive = []
@@ -177,13 +189,16 @@ massive = [[" "] * 8 for i in range(10)]
 for k in range(8):
 	for l in range(10):
 		counter = 0
-		for i in range(3, lineshor[l + 1] - lineshor[l] - 3):
-			for j in range(3, linesvert[k + 1] - linesvert[k] - 3):
-				counter += fieldnew[lineshor[l] + i][linesvert[k] + j]
+		for i in range(lineshor[l] + 4, lineshor[l + 1] - 4):
+			for j in range(linesvert[k] + 4, linesvert[k + 1] - 4):
+				counter += fieldnew[i][j]
 		if counter >= 1:
 			massive[l][k] = "+"
 		else:
 			massive[l][k] = "-"
+		# roi = dst[lineshor[l] : lineshor[l + 1], linesvert[k] : linesvert[k + 1]]
+		# cv.imshow("roi", roi)
+		# cv.waitKey()
 
 # make file with pluses
 with open('conduit.csv', 'w') as f_write:

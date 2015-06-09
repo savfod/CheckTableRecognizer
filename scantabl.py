@@ -15,7 +15,7 @@ res = cv.resize(blur, None, fx = 780. / cols, fy = 220. / rows, interpolation = 
 # 		binpart = cv.threshold(imgpart, 127, 255, cv.THRESH_OTSU)[1]
 # 		res[11 * i : 11 * (i + 1), 39 * j : 39 * (j + 1)] = binpart
 ibin = cv.threshold(res, 127, 255, cv.THRESH_OTSU)[1]
-# cv.imshow("ibin", ibin)
+# cv.imwrite('ibin.png', ibin)
 # cv.waitKey()
 
 # get matrix
@@ -126,11 +126,11 @@ for i in range(len(rect4)):
 # print rect2x, rect2y
 # print rect3x, rect3y
 # print rect4x, rect4y
-ibin = cv.rectangle(ibin, (rect1x - 2, rect1y - 2), (rect1x + 2, rect1y + 2), (0, 250, 0), 3)
-ibin = cv.rectangle(ibin, (rect2x - 2, rect2y - 2), (rect2x + 2, rect2y + 2), (0, 250, 0), 3)
-ibin = cv.rectangle(ibin, (rect3x - 2, rect3y - 2), (rect3x + 2, rect3y + 2), (0, 250, 0), 3)
-ibin = cv.rectangle(ibin, (rect4x - 2, rect4y - 2), (rect4x + 2, rect4y + 2), (0, 250, 0), 3)
-# cv.imshow("ibin", ibin)
+# ibin = cv.rectangle(ibin, (rect1x - 2, rect1y - 2), (rect1x + 2, rect1y + 2), (0, 250, 0), 3)
+# ibin = cv.rectangle(ibin, (rect2x - 2, rect2y - 2), (rect2x + 2, rect2y + 2), (0, 250, 0), 3)
+# ibin = cv.rectangle(ibin, (rect3x - 2, rect3y - 2), (rect3x + 2, rect3y + 2), (0, 250, 0), 3)
+# ibin = cv.rectangle(ibin, (rect4x - 2, rect4y - 2), (rect4x + 2, rect4y + 2), (0, 250, 0), 3)
+# cv.imwrite('ibinwithrect.png', ibin)
 # cv.waitKey()
 
 # perspective transformation
@@ -138,7 +138,7 @@ pts1 = np.float32([[rect1x, rect1y], [rect3x, rect3y], [rect2x, rect2y], [rect4x
 pts2 = np.float32([[0, 0], [780, 0],[0, 220], [780, 220]])
 M = cv.getPerspectiveTransform(pts1, pts2)
 dst = cv.warpPerspective(ibin, M, (780, 220))
-# cv.imshow("dst", dst)
+# cv.imwrite('persptrans.png', dst)
 # cv.waitKey()
 
 # get matrix
@@ -177,13 +177,13 @@ for k in range(8):
 			maxline = j
 	linesvert.append(maxline)
 linesvert.append(780)
-for i in range(len(linesvert)):
-	dst = cv.rectangle(dst, (linesvert[i] - 3, 0), (linesvert[i], 3), (0, 250, 0), 3)
+# for i in range(len(linesvert)):
+# 	dst = cv.rectangle(dst, (linesvert[i] - 3, 0), (linesvert[i], 3), (0, 250, 0), 3)
 # print linesvert
-# cv.imshow("dstnew", dst)
+# cv.imwrite('dstwithlines.png', dst)
 # cv.waitKey()
 
-# make massive with pluses (new)
+# make massive with pluses
 massive = []
 massive = [[" "] * 8 for i in range(10)]
 for k in range(8):
@@ -197,11 +197,20 @@ for k in range(8):
 		else:
 			massive[l][k] = "-"
 		# roi = dst[lineshor[l] : lineshor[l + 1], linesvert[k] : linesvert[k + 1]]
-		# cv.imshow("roi", roi)
+		# cv.imwrite(str("roi") + str(8 * l + k) + str(".png"), roi)
 		# cv.waitKey()
 
-# make file with pluses
+# make dictionary with surnames
+with open('groupeng.txt', 'r') as f_read:
+	surnames = f_read.readlines()
+# masdict = [[0] * 11 for i in range(6)]
+# for i in range(6):
+# 	for j in range(11):
+# 		masdict[i][j] = surnames[11 * i + j]
+# print masdict
+
+# make file with pluses	
 with open('conduit.csv', 'w') as f_write:
 	f_write.write("spreadsheet number " + str(1) + '\n')
 	for i in range(10):
-		f_write.write(" ".join(map(str, massive[i])) + '\n')
+		f_write.write(surnames[i] + " ".join(map(str, massive[i])) + '\n')

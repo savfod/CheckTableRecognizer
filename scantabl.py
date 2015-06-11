@@ -201,16 +201,20 @@ for k in range(8):
 		# cv.waitKey()
 
 # make dictionary with surnames
-with open('groupeng.txt', 'r') as f_read:
-	surnames = f_read.readlines()
-# masdict = [[0] * 11 for i in range(6)]
-# for i in range(6):
-# 	for j in range(11):
-# 		masdict[i][j] = surnames[11 * i + j]
-# print masdict
+surnames = []
+with open('groups.txt', 'r') as f_read:
+	for line in f_read:
+		line.decode('cp1251')
+		line = unicode(line, 'cp866')
+		surnames.append(line)
+masdict = [[0] * 11 for i in range(5)]
+for i in range(5):
+	for j in range(11):
+		masdict[i][j] = surnames[11 * i + j]
+print masdict
 
 # make file with pluses	
 with open('conduit.csv', 'w') as f_write:
-	f_write.write("spreadsheet number " + str(1) + '\n')
+	f_write.write("группа номер " + str(number) + '\n')
 	for i in range(10):
-		f_write.write(surnames[i] + " ".join(map(str, massive[i])) + '\n')
+		f_write.write(masdict[number - 1][i + 1].encode('cp866') + " ".join(map(str, massive[i])) + '\n')

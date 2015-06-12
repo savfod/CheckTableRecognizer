@@ -213,9 +213,15 @@ for j in range(180):
 		counter += fieldnew[i][j]
 	array.append(counter)
 # print array
+summa = []
+for i in range(len(array)):
+	counter = 0
+	for j in range(i + 1):
+		counter += array[j]
+	summa.append(counter)
 number = 0
 for i in range(len(array) - 1):
-	if array[i + 1] - array[i] > 10:
+	if summa[i + 1] - summa[i] > 6:
 		number += 1
 
 # make dictionary with surnames

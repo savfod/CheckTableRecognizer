@@ -206,23 +206,18 @@ for k in range(8):
 		# cv.waitKey()
 
 # find out number of group
-array = []
-for j in range(180):
+verticals = []
+for j in range(5, 175):
 	counter = 0
 	for i in range(20):
 		counter += fieldnew[i][j]
-	array.append(counter)
-# print array
-summa = []
-for i in range(len(array)):
-	counter = 0
-	for j in range(i + 1):
-		counter += array[j]
-	summa.append(counter)
-number = 0
-for i in range(len(array) - 1):
-	if summa[i + 1] - summa[i] > 6:
-		number += 1
+	if counter >= 10:
+		verticals.append([counter, j])
+number = len(verticals)
+if number != 1:
+	for i in range(len(verticals) - 1):
+		if verticals[i + 1][1] - verticals[i][1] < 5:
+			number -= 1
 
 # make dictionary with surnames
 surnames = []

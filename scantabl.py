@@ -1,6 +1,5 @@
 import sys, cv2 as cv
 import numpy as np
-from math import *
 
 # load imagine
 im = cv.imread(sys.argv[1], 1)

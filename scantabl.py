@@ -17,8 +17,8 @@ res = cv.resize(blur, None, fx = 780. / cols, fy = 220. / rows, interpolation = 
 # 		res[11 * i : 11 * (i + 1), 39 * j : 39 * (j + 1)] = binpart
 ibin = cv.threshold(res, 127, 255, cv.THRESH_OTSU)[1]
 # cv.imwrite('ibin.png', ibin)
-cv.imshow('ibin.png', ibin)
-cv.waitKey()
+# cv.imshow('ibin.png', ibin)
+# cv.waitKey()
 
 # get matrix
 field = [[0] * 780 for i in range(220)]
@@ -128,13 +128,13 @@ for i in range(len(rect4)):
 # print rect2x, rect2y
 # print rect3x, rect3y
 # print rect4x, rect4y
-ibin = cv.rectangle(ibin, (rect1x - 2, rect1y - 2), (rect1x + 2, rect1y + 2), (0, 250, 0), 3)
-ibin = cv.rectangle(ibin, (rect2x - 2, rect2y - 2), (rect2x + 2, rect2y + 2), (0, 250, 0), 3)
-ibin = cv.rectangle(ibin, (rect3x - 2, rect3y - 2), (rect3x + 2, rect3y + 2), (0, 250, 0), 3)
-ibin = cv.rectangle(ibin, (rect4x - 2, rect4y - 2), (rect4x + 2, rect4y + 2), (0, 250, 0), 3)
+# ibin = cv.rectangle(ibin, (rect1x - 2, rect1y - 2), (rect1x + 2, rect1y + 2), (0, 250, 0), 3)
+# ibin = cv.rectangle(ibin, (rect2x - 2, rect2y - 2), (rect2x + 2, rect2y + 2), (0, 250, 0), 3)
+# ibin = cv.rectangle(ibin, (rect3x - 2, rect3y - 2), (rect3x + 2, rect3y + 2), (0, 250, 0), 3)
+# ibin = cv.rectangle(ibin, (rect4x - 2, rect4y - 2), (rect4x + 2, rect4y + 2), (0, 250, 0), 3)
 # cv.imwrite('ibinwithrect.png', ibin)
-cv.imshow('ibinwithrect.png', ibin)
-cv.waitKey()
+# cv.imshow('ibinwithrect.png', ibin)
+# cv.waitKey()
 
 # perspective transformation
 pts1 = np.float32([[rect1x, rect1y], [rect3x, rect3y], [rect2x, rect2y], [rect4x, rect4y]])
@@ -142,8 +142,8 @@ pts2 = np.float32([[0, 0], [780, 0],[0, 220], [780, 220]])
 M = cv.getPerspectiveTransform(pts1, pts2)
 dst = cv.warpPerspective(ibin, M, (780, 220))
 # cv.imwrite('persptrans.png', dst)
-cv.imshow('persptrans.png', dst)
-cv.waitKey()
+# cv.imshow('persptrans.png', dst)
+# cv.waitKey()
 
 # get matrix
 fieldnew = [[0] * 780 for i in range(220)]
@@ -165,8 +165,8 @@ for k in range(10):
 			maxline = i
 	lineshor.append(maxline)
 lineshor.append(220)
-for i in range(len(lineshor)):
-	dst = cv.rectangle(dst, (0, lineshor[i] - 3), (3, lineshor[i]), (0, 250, 0), 3)
+# for i in range(len(lineshor)):
+# 	dst = cv.rectangle(dst, (0, lineshor[i] - 3), (3, lineshor[i]), (0, 250, 0), 3)
 # print lineshor
 
 linesvert = []
@@ -181,12 +181,12 @@ for k in range(8):
 			maxline = j
 	linesvert.append(maxline)
 linesvert.append(780)
-for i in range(len(linesvert)):
-	dst = cv.rectangle(dst, (linesvert[i] - 3, 0), (linesvert[i], 3), (0, 250, 0), 3)
+# for i in range(len(linesvert)):
+# 	dst = cv.rectangle(dst, (linesvert[i] - 3, 0), (linesvert[i], 3), (0, 250, 0), 3)
 # print linesvert
 # cv.imwrite('dstwithlines.png', dst)
-cv.imshow('dstwithlines.png', dst)
-cv.waitKey()
+# cv.imshow('dstwithlines.png', dst)
+# cv.waitKey()
 
 # make massive with pluses
 massive = []
@@ -225,9 +225,9 @@ with open('groups.txt', 'r') as f_read:
 	for line in f_read:
 		line.decode('cp1251')
 		line = unicode(line, 'cp866')
-		surnames.append(line[:-2])
-masdict = [[0] * 11 for i in range(5)]
-for i in range(5):
+		surnames.append(line[:-1])
+masdict = [[0] * 11 for i in range(6)]
+for i in range(6):
 	for j in range(11):
 		masdict[i][j] = surnames[11 * i + j]
 

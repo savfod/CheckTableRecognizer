@@ -1,0 +1,503 @@
+\documentclass[a4paper,12pt]{extreport}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\usepackage[left=2.5cm, right=1.5cm, top=2.5cm, bottom=2.5cm]{geometry}
+\linespread{1.25}
+\usepackage{indentfirst}
+\setlength\parindent{5ex}
+
+\usepackage{fancyhdr}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\thepage}
+\renewcommand{\headrulewidth}{1pt}
+
+\fancypagestyle{plain}{ 
+  \fancyhf{}
+  \rhead{\thepage}}
+  
+\usepackage{titlesec}
+
+\titleformat{\chapter}[block]
+  {\filcenter}
+  {\thechapter}
+  {1em}
+  {\MakeUppercase}{}
+
+\titlespacing*{\chapter}{0pt}{-30pt}{*4}
+
+\titleformat{\section}
+  {}
+  {\thesection}
+  {3ex}{}
+
+\titlespacing*{\section}{\parindent}{*4}{*4}
+
+\addto{\captionsrussian}{\renewcommand*{\contentsname}{Содержание}}
+\usepackage{titletoc}
+\dottedcontents{chapter}[1.6em]{}{1.6em}{1pc}
+\usepackage[hidelinks]{hyperref}
+
+\renewcommand{\labelenumi}{\asbuk{enumi})}
+\renewcommand{\labelenumii}{\arabic{enumii})}
+
+%%%%%%%%%%%%%%%
+% Title Page
+\title{\LaTeX\ отчет}
+\author{Фесюк Марина\\Практика по информатике / Распознавание кондуитов}
+\date{\today}
+%%%%%%%%%%%%%%%
+
+\usepackage{natbib}
+\usepackage{graphicx}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents{}
+
+\setcounter{secnumdepth}{4}
+
+\chapter{Формулировка задачи}
+Распознать табличные значения кондуита по фотографии и создать аналогичный кондуит в Excel.
+
+\chapter{Входные/выходные данные}
+\section{Входные данные}
+Изображение кондуита в формате jpg и текстовый файл «groups.txt», которрый состоит из определенного числа групп учащихся по 10 человек (перед списком каждой группы должен в отдельной строке стоять ее номер, а под ним уже должны быть написаны фамилии и имена учащихся данной группы с новой строчки каждый в том порядке, в котором они находятся в распознваемом кондуите).
+\section{Выходные данные}
+Таблица в Excel полностью аналогичная той, которая была дана на вход в качестве изображения.
+
+\chapter{Требования к программе}
+\section{На устройстве, использующем данную программу, должны быть установлены следующие программы:}
+\subsection{Python 2.7.4}
+\subsection{Open CV 3.0.0}
+\subsection{NumPy 1.9.2}
+\section{Фотография должна быть сделана при следующих условиях:}
+\subsection{лист с кондуитом правильно ориентирован по отношению к камере}
+\subsection{угол наклона камеры по отношению к листу с кондуитом не превышает 30 градусов}
+\subsection{освещение в комнате, где производится фотографирование, равномерное (теней на фотографии не должно быть видно)}
+\section{Изображение должно быть сохранено в той же папке, что и программа, в формате jpg}
+\section{В одной папке с программой должен находиться файл с названием «groups.txt», в котором должны быть записаны номера групп, а под каждым из них имена и фамилии 10 учащихся в этой группе каждый с новой строчки  в том порядке, в котором они расположены в соответствующих кондуитах}
+\section{Кондуит должен удовлетворять следующим условиям:}
+\subsection{9 строчек и 11 столбцов}
+\subsection{в первой строчке со второго столбца по девятый записаны номера задач с 1 по 8}
+\subsection{в первом столбце со второй строчки по одиннадцатую записаны фамилии и имена учеников}
+\subsection{в первом столбце в первой строчке количество вертикальных линий должно соответствовать номеру группы (группы используют в том случае, если нужно отсканировать кондуиты с разными учащимися; каждой такой группе присваивается номер от 1 до 20; если группа одна, то у нее все равно должен быть номер)}
+\subsection{если ученик из списка в первом столбце сдал задачу, то на пересечении строчки, содержащей его фамилию и имя, и столбца, содержащего номер задачи, стоит +}
+\subsection{по углам таблицы с внешней стороны находятся черные квадраты}
+\subsection{ширина кондуита должна относиться к длине как 11:39}
+\subsection{длина первого столбца - как 9:39}
+\subsection{ширина строк одинаковая}
+\subsection{столбцы со второго по девятый равны по длине и относятся к общей длине таблицы как 5:52}
+\subsection{длины сторон черных квадратов по углам таблицы равны и относятся к общей ширине таблицы как 1:11}
+\section{Данные в таблицу должны заноситься черной (желательно гелевой) ручкой}
+
+\chapter{Описание кода}
+Программа поделена на несколько блоков, каждый из которых выполняет определенные функции, описываемые ниже:
+\section{Загрузка изображения (4-5 строчки)}
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.1]{t62.jpg}
+\end{figure}
+
+\section{Обработка изображения, а именно изменения размера и бинаризация (7-20 строчки)}
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.5]{ibin.png}
+\end{figure}
+
+\section{Создание двумерного массива, где каждому 0 соответствует белый пиксель на изображении, а каждой 1 – черный (22-27 строчки)}
+
+\section{Нахождение четырех черных квадратов, расположенных по углам таблицы, с помощью уже созданного двумерного массива (29-136 строчки)}
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.5]{ibinwithrect.png}
+\end{figure}
+
+\section{Произведение перспективной трансформации изображения с целью выравнивания таблицы по ее углам, найденным в предыдущем пункте, углы таблицы располагаются ровно по углам полученного изображения (138-145 строчки)}
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.5]{persptrans.png}
+\end{figure}
+
+\section{Создание нового двумерного массива по правилам, описанным в п.3 (147-152 строчки)}
+
+\section{Нахождение x-координат для вертикальных и y-координат для горизонтальных линий, разделяющих ячейки таблицы (154-188 строчки)}
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.5]{dstwithlines.png}
+\end{figure}
+
+\section{Создание двумерного массива, состоящего из 10 строчек по количеству учеников и 8 столбцов по количеству задач и заполненного плюсами и минусами в соответствии с принятым на вход изображением (190-205 строчки)}
+\begin{figure}[h]
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi0.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi1.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi2.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi3.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi4.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi5.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi6.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi7.png}}
+\end{minipage}
+\end{figure}
+
+\begin{figure}[h]
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi8.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi9.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi10.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi11.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi12.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi13.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi14.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi15.png}}
+\end{minipage}
+\end{figure}
+
+\begin{figure}[h]
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi16.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi17.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi18.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi19.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi20.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi21.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi22.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi23.png}}
+\end{minipage}
+\end{figure}
+
+\begin{figure}[h]
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi24.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi25.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi26.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi27.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi28.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi29.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi30.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi31.png}}
+\end{minipage}
+\end{figure}
+
+\begin{figure}[h]
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi32.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi33.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi34.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi35.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi36.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi37.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi38.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi39.png}}
+\end{minipage}
+\end{figure}
+
+\begin{figure}[h]
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi40.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi41.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi42.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi43.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi44.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi45.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi46.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi47.png}}
+\end{minipage}
+\end{figure}
+
+\begin{figure}[h]
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi48.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi49.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi50.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi51.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi52.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi53.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi54.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi55.png}}
+\end{minipage}
+\end{figure}
+
+\begin{figure}[h]
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi56.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi57.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi58.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi59.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi60.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi61.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi62.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi63.png}}
+\end{minipage}
+\end{figure}
+
+\begin{figure}[h]
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi64.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi65.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi66.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi67.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi68.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi69.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi70.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi71.png}}
+\end{minipage}
+\end{figure}
+
+\begin{figure}[h]
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi72.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi73.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi74.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi75.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi76.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi77.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi78.png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.1\linewidth}
+\center{\includegraphics[width=1\linewidth]{roi79.png}}
+\end{minipage}
+\end{figure}
+
+\section{Нахождение номера группы по количеству проведенных вертикальных линий в отведенном для этого поле (221-237 строчки)}
+
+\section{Считываение имен и фамилий учащихся из файла «groups.txt» и запись их в выходной файл «conduit.csv» вместе с + и – , записываемыми в соответствии с кондуитом, изображение которого было передано на вход программе (203-216 строчки)}
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.5]{conduit.png}
+\end{figure}
+
+\chapter{Руководство пользователя}
+\section{создать кондуит по правилам, описываемым в пунктах 3.2 и 3.5}
+\section{загрузить фотографию кондуита в формате jpg в папку, содержащую данную программу}
+\section{создать в этой же папке файл "groups.txt" с номерами групп и именами и фамилиями учащихся под ними, каждый ученик с новой строчки}
+\section{установить пограммы и библиоткеи, перечисленные в пункте 3.1}
+\section{написать в cmd путь к папке, в которой содержится данная программа}
+\section{в следующей строке в cmd написать C:\ Python27\ python.exe scantabl.py photo.jpg, где photo - название загруженной фотографии}
+\section{после выполнения программы в папке появится файл "conduit.csv" с кондуитом, аналогичным тому, чье изображение было передано на вход}
+
+\bibliographystyle{plain}
+\bibliography{references}
+http://opencv-python-tutroals.readthedocs.org/en/latest/py_tutorials/py_tutorials.html
+\\
+http://habrahabr.ru/company/enterra/blog/244163/
+\\
+http://robocraft.ru/blog/computervision/264.html
+\\
+http://docs.opencv.org/index.html
+\\
+http://informatics.mccme.ru/
+\end{document}

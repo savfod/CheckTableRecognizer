@@ -1,5 +1,14 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 import sys, cv2 as cv
 import numpy as np
+from math import *
+
+# get quantity of students and tasks
+tasks = int(input())
+students = int(input())
+length = 180 + 75 * tasks
+height = 20 * (students + 1)
 
 # load imagine
 im = cv.imread(sys.argv[1], 1)
@@ -8,28 +17,23 @@ im = cv.imread(sys.argv[1], 1)
 gray = cv.cvtColor(im, cv.COLOR_RGB2GRAY)
 blur = cv.blur(gray, (3, 3))
 rows, cols = blur.shape
-res = cv.resize(blur, None, fx = 780. / cols, fy = 220. / rows, interpolation = cv.INTER_CUBIC)
-# for i in range(20):
-# 	for j in range(20):
-# 		imgpart = res[11 * i : 11 * (i + 1), 39 * j : 39 * (j + 1)]
-# 		binpart = cv.threshold(imgpart, 127, 255, cv.THRESH_OTSU)[1]
-# 		res[11 * i : 11 * (i + 1), 39 * j : 39 * (j + 1)] = binpart
+res = cv.resize(blur, None, fx = float(length) / cols, fy = float(height) / rows, interpolation = cv.INTER_CUBIC)
 ibin = cv.threshold(res, 127, 255, cv.THRESH_OTSU)[1]
 # cv.imwrite('ibin.png', ibin)
 # cv.imshow('ibin.png', ibin)
 # cv.waitKey()
 
 # get matrix
-field = [[0] * 780 for i in range(220)]
-for i in range(780):
-	for j in range(220):
+field = [[0] * length for i in range(height)]
+for i in range(length):
+	for j in range(height):
 		if ibin[j, i] == 0:
 			field[j][i] = 1
 
 # find 4 rectangles
 rect1 = []
-for i in range(10, 110 - 10):
-	for j in range(10, 390 - 10):
+for i in range(10, height // 2 - 10):
+	for j in range(10, length // 2 - 10):
 		counter = 0
 		for l in range(9):
 			for k in range(9):
@@ -52,8 +56,8 @@ for i in range(len(rect1)):
 		rect1y = rect1[i][2]
 
 rect2 = []
-for i in range(110 + 10, 220 - 10):
-	for j in range(10, 390 - 10):
+for i in range(height // 2 + 10, height - 10):
+	for j in range(10, length // 2 - 10):
 		counter = 0
 		for l in range(9):
 			for k in range(9):
@@ -76,8 +80,8 @@ for i in range(len(rect1)):
 		rect2y = rect2[i][2]
 
 rect3 = []
-for i in range(10, 110 - 10):
-	for j in range(390 + 10, 780 - 10):
+for i in range(10, height // 2 - 10):
+	for j in range(length // 2 + 10, length - 10):
 		counter = 0
 		for l in range(9):
 			for k in range(9):
@@ -100,8 +104,8 @@ for i in range(len(rect1)):
 		rect3y = rect3[i][2]
 
 rect4 = []
-for i in range(110 + 10, 220 - 10):
-	for j in range(390 + 10, 780 - 10):
+for i in range(height // 2 + 10, height - 10):
+	for j in range(length // 2 + 10, length - 10):
 		counter = 0
 		for l in range(9):
 			for k in range(9):
@@ -137,49 +141,49 @@ for i in range(len(rect4)):
 
 # perspective transformation
 pts1 = np.float32([[rect1x, rect1y], [rect3x, rect3y], [rect2x, rect2y], [rect4x, rect4y]])
-pts2 = np.float32([[0, 0], [780, 0],[0, 220], [780, 220]])
+pts2 = np.float32([[0, 0], [length, 0],[0, height], [length, height]])
 M = cv.getPerspectiveTransform(pts1, pts2)
-dst = cv.warpPerspective(ibin, M, (780, 220))
+dst = cv.warpPerspective(ibin, M, (length, height))
 # cv.imwrite('persptrans.png', dst)
 # cv.imshow('persptrans.png', dst)
 # cv.waitKey()
 
 # get matrix
-fieldnew = [[0] * 780 for i in range(220)]
-for i in range(780):
-	for j in range(220):
+fieldnew = [[0] * length for i in range(height)]
+for i in range(length):
+	for j in range(height):
 		if dst[j, i] == 0:
 			fieldnew[j][i] = 1
 
 # find lines
 lineshor = []
-for k in range(10):
+for k in range(students):
 	maxcount = 0
 	for i in range(20 + 20 * k - 5, 20 + 20 * k + 5):
 		counter = 0
-		for j in range(780):
+		for j in range(length):
 			counter += fieldnew[i][j]
 		if counter > maxcount:
 			maxcount = counter
 			maxline = i
 	lineshor.append(maxline)
-lineshor.append(220)
+lineshor.append(height)
 # for i in range(len(lineshor)):
 # 	dst = cv.rectangle(dst, (0, lineshor[i] - 3), (3, lineshor[i]), (0, 250, 0), 3)
 # print lineshor
 
 linesvert = []
-for k in range(8):
+for k in range(tasks):
 	maxcount = 0
 	for j in range(180 + 75 * k - 10, 180 + 75 * k + 10):
 		counter = 0
-		for i in range(220):
+		for i in range(height):
 			counter += fieldnew[i][j]
 		if counter > maxcount:
 			maxcount = counter
 			maxline = j
 	linesvert.append(maxline)
-linesvert.append(780)
+linesvert.append(length)
 # for i in range(len(linesvert)):
 # 	dst = cv.rectangle(dst, (linesvert[i] - 3, 0), (linesvert[i], 3), (0, 250, 0), 3)
 # print linesvert
@@ -189,9 +193,9 @@ linesvert.append(780)
 
 # make massive with pluses
 massive = []
-massive = [[" "] * 8 for i in range(10)]
-for k in range(8):
-	for l in range(10):
+massive = [[" "] * tasks for i in range(students)]
+for k in range(tasks):
+	for l in range(students):
 		counter = 0
 		for i in range(lineshor[l] + 4, lineshor[l + 1] - 4):
 			for j in range(linesvert[k] + 4, linesvert[k + 1] - 4):
@@ -210,28 +214,34 @@ for j in range(5, 175):
 	counter = 0
 	for i in range(20):
 		counter += fieldnew[i][j]
-	if counter >= 10:
+	if counter >= 6:
 		verticals.append([counter, j])
 number = len(verticals)
 if number != 1:
 	for i in range(len(verticals) - 1):
-		if verticals[i + 1][1] - verticals[i][1] < 5:
+		if abs(verticals[i + 1][1] - verticals[i][1]) < 5:
 			number -= 1
 
 # make dictionary with surnames
 surnames = []
 with open('groups.txt', 'r') as f_read:
 	for line in f_read:
-		line.decode('cp1251')
-		line = unicode(line, 'cp866')
-		surnames.append(line[:-1])
-masdict = [[0] * 11 for i in range(6)]
-for i in range(6):
-	for j in range(11):
-		masdict[i][j] = surnames[11 * i + j]
+		surnames.append(line.decode(encoding = "utf8"))
+groups = [0]
+for i in range(len(surnames)):
+	if len(surnames[i]) == 2:
+		groups.append(i)
+group = []
+if number == len(groups):
+	for i in range(groups[number - 1] + 1, len(surnames) - 1):
+		group.append(surnames[i][:-1])
+	group.append(surnames[-1])
+else:
+	for i in range(groups[number - 1] + 1, groups[number]):
+		group.append(surnames[i][:-1])
 
 # make file with pluses	
 with open('conduit.csv', 'w') as f_write:
 	f_write.write(str(number) + ';1;2;3;4;5;6;7;8' + '\n')
-	for i in range(10):
-		f_write.write(masdict[number - 1][i + 1].encode('cp866') +';' + ";".join(map(str, massive[i])) + '\n')
+	for i in range(students):
+		f_write.write(group[i].encode('cp1251') + ';' + ";".join(map(str, massive[i])) + '\n')

@@ -25,7 +25,7 @@ imgDrawer.rectangle((length + 20, 0, length + 40, 20), fill = "#000000", outline
 imgDrawer.rectangle((0, height + 20, 20, height + 40), fill = "#000000", outline = "#000000")
 imgDrawer.rectangle((length + 20, height + 20, length + 40, height + 40), fill = "#000000", outline = "#000000")
 for i in range(200, length + 20, 75):
-	imgDrawer.line((i, 20, i, length + 20), fill = "#000000", width = 1)
+	imgDrawer.line((i, 20, i, height + 20), fill = "#000000", width = 1)
 for i in range(40, height + 20, 20):
 	imgDrawer.line((20, i, length + 20, i), fill = "#000000", width = 1)
 for i in range(tasks):

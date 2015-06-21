@@ -131,10 +131,10 @@ for i in range(len(rect4)):
 # print rect2x, rect2y
 # print rect3x, rect3y
 # print rect4x, rect4y
-# ibin = cv.rectangle(ibin, (rect1x - 2, rect1y - 2), (rect1x + 2, rect1y + 2), (0, 250, 0), 3)
-# ibin = cv.rectangle(ibin, (rect2x - 2, rect2y - 2), (rect2x + 2, rect2y + 2), (0, 250, 0), 3)
-# ibin = cv.rectangle(ibin, (rect3x - 2, rect3y - 2), (rect3x + 2, rect3y + 2), (0, 250, 0), 3)
-# ibin = cv.rectangle(ibin, (rect4x - 2, rect4y - 2), (rect4x + 2, rect4y + 2), (0, 250, 0), 3)
+ibin = cv.rectangle(ibin, (rect1x - 2, rect1y - 2), (rect1x + 2, rect1y + 2), (0, 250, 0), 3)
+ibin = cv.rectangle(ibin, (rect2x - 2, rect2y - 2), (rect2x + 2, rect2y + 2), (0, 250, 0), 3)
+ibin = cv.rectangle(ibin, (rect3x - 2, rect3y - 2), (rect3x + 2, rect3y + 2), (0, 250, 0), 3)
+ibin = cv.rectangle(ibin, (rect4x - 2, rect4y - 2), (rect4x + 2, rect4y + 2), (0, 250, 0), 3)
 # cv.imwrite('ibinwithrect.png', ibin)
 # cv.imshow('ibinwithrect.png', ibin)
 # cv.waitKey()
@@ -241,7 +241,10 @@ else:
 		group.append(surnames[i][:-1])
 
 # make file with pluses	
+num = []
+for i in range(tasks):
+	num.append(i + 1)
 with open('conduit.csv', 'w') as f_write:
-	f_write.write(str(number) + ';1;2;3;4;5;6;7;8' + '\n')
+	f_write.write(str(number) + ';' + ";".join(map(str, num)) + '\n')
 	for i in range(students):
 		f_write.write(group[i].encode('cp1251') + ';' + ";".join(map(str, massive[i])) + '\n')

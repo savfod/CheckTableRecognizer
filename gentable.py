@@ -40,4 +40,4 @@ for i in range(students):
 	imgDrawer.text((30, 20 * (i + 2) + 5), surnames[i + 2], font = ImageFont.truetype("DejaVuSans.ttf", 12), fill = (0,0,0))
 
 # save image
-img.save("new-conduit.png")
+img.save(str(group) + '-' + str(tasks) + str(".png"))

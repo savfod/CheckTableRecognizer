@@ -1,3 +1,10 @@
+This program generates and recognise from photo pluses in tables like 
+
+![][table]
+[table]:https://www.dropbox.com/s/is5y3qt7e5fm2te/OneOfMarinasPhoto.jpg?dl=0&raw=1
+
+Russian about from Marina:
+
 Тема проекта:
 
 Распознавание кондуитов

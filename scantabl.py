@@ -5,13 +5,29 @@ import numpy as np
 from math import *
 
 # get quantity of students and tasks
-tasks = int(input())
-students = int(input())
-length = 180 + 75 * tasks
+if len(sys.argv)==5:
+	image_file = sys.argv[1]
+	groups_file = sys.argv[2]
+	tasks = int(sys.argv[3])
+	students = int(sys.argv[4])
+else:
+	print("usage: python "+sys.argv[0]+" imageFile groupsFile TaskCount StudentsCount")
+	print("no info found, using example parameters:")
+	image_file = "example/image.jpg"; print("imageFile = example/image.jpg")
+	groups_file = "example/groups.txt"; print("groupsFile = example/groups.txt")
+	tasks = 8; print("TaskCount = 8")
+	students = 10; print("StudentsCount = 10")
+
+COL_NAME_LENGTH = 180
+COL_TASK_LENGTH = 75
+REC_SIZE=10
+
+length = COL_NAME_LENGTH + COL_TASK_LENGTH * tasks
 height = 20 * (students + 1)
 
+
 # load imagine
-im = cv.imread(sys.argv[1], 1)
+im = cv.imread(image_file, 1)
 
 # binary imagine
 gray = cv.cvtColor(im, cv.COLOR_RGB2GRAY)
@@ -131,13 +147,13 @@ for i in range(len(rect4)):
 # print rect2x, rect2y
 # print rect3x, rect3y
 # print rect4x, rect4y
-ibin = cv.rectangle(ibin, (rect1x - 2, rect1y - 2), (rect1x + 2, rect1y + 2), (0, 250, 0), 3)
-ibin = cv.rectangle(ibin, (rect2x - 2, rect2y - 2), (rect2x + 2, rect2y + 2), (0, 250, 0), 3)
-ibin = cv.rectangle(ibin, (rect3x - 2, rect3y - 2), (rect3x + 2, rect3y + 2), (0, 250, 0), 3)
-ibin = cv.rectangle(ibin, (rect4x - 2, rect4y - 2), (rect4x + 2, rect4y + 2), (0, 250, 0), 3)
-# cv.imwrite('ibinwithrect.png', ibin)
-# cv.imshow('ibinwithrect.png', ibin)
-# cv.waitKey()
+cv.rectangle(ibin, (rect1x - REC_SIZE, rect1y - REC_SIZE), (rect1x + REC_SIZE, rect1y + REC_SIZE), (0, 250, 0), 3)
+cv.rectangle(ibin, (rect2x - REC_SIZE, rect2y - REC_SIZE), (rect2x + REC_SIZE, rect2y + REC_SIZE), (0, 250, 0), 3)
+cv.rectangle(ibin, (rect3x - REC_SIZE, rect3y - REC_SIZE), (rect3x + REC_SIZE, rect3y + REC_SIZE), (0, 250, 0), 3)
+cv.rectangle(ibin, (rect4x - REC_SIZE, rect4y - REC_SIZE), (rect4x + REC_SIZE, rect4y + REC_SIZE), (0, 250, 0), 3)
+cv.imwrite('ibinwithrect.png', ibin)
+cv.imshow('ibinwithrect.png', ibin)
+cv.waitKey()
 
 # perspective transformation
 pts1 = np.float32([[rect1x, rect1y], [rect3x, rect3y], [rect2x, rect2y], [rect4x, rect4y]])
@@ -156,6 +172,7 @@ for i in range(length):
 			fieldnew[j][i] = 1
 
 # find lines
+maxline = 0
 lineshor = []
 for k in range(students):
 	maxcount = 0
@@ -171,11 +188,11 @@ lineshor.append(height)
 # for i in range(len(lineshor)):
 # 	dst = cv.rectangle(dst, (0, lineshor[i] - 3), (3, lineshor[i]), (0, 250, 0), 3)
 # print lineshor
-
+maxline = 0
 linesvert = []
 for k in range(tasks):
 	maxcount = 0
-	for j in range(180 + 75 * k - 10, 180 + 75 * k + 10):
+	for j in range(COL_NAME_LENGTH + COL_TASK_LENGTH * k - 10, COL_NAME_LENGTH + COL_TASK_LENGTH * k + 10):
 		counter = 0
 		for i in range(height):
 			counter += fieldnew[i][j]
@@ -224,7 +241,7 @@ if number != 1:
 
 # make dictionary with surnames
 surnames = []
-with open('groups.txt', 'r') as f_read:
+with open(groups_file, 'r') as f_read:
 	for line in f_read:
 		surnames.append(line.decode(encoding = "utf8"))
 groups = [0]
@@ -241,10 +258,18 @@ else:
 		group.append(surnames[i][:-1])
 
 # make file with pluses	
-num = []
-for i in range(tasks):
-	num.append(i + 1)
-with open('conduit.csv', 'w') as f_write:
-	f_write.write(str(number) + ';' + ";".join(map(str, num)) + '\n')
-	for i in range(students):
-		f_write.write(group[i].encode('cp1251') + ';' + ";".join(map(str, massive[i])) + '\n')
+
+def save_result(tasks, students, group, massive):
+	num = []
+	for i in range(tasks):
+		num.append(i + 1)
+
+	#print (students, ",".join(s.encode('utf-8') for s in group), massive)
+	with open('conduit.csv', 'w') as f_write:
+		f_write.write(str(number) + ';' + ";".join(map(str, num)) + '\n')
+		#for i in range(students):
+		for i in range(5):
+			#f_write.write(';' + ";".join(map(str, massive[i])) + '\n')
+			f_write.write(group[i].encode('utf8') + ';' + ";".join(map(str, massive[i])) + '\n')
+
+save_result(tasks, students, group, massive)

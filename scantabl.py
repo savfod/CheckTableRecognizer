@@ -12,7 +12,7 @@ if len(sys.argv)==5:
 	students = int(sys.argv[4])
 else:
 	print("usage: python "+sys.argv[0]+" imageFile groupsFile TaskCount StudentsCount")
-	print("no info found, using example parameters:")
+	print("\nEXPECTED 4 PARAMS, " + str(len(sys.argv)-1) + " FOUND, USING EXAMPLE PARAMETERS:")
 	image_file = "example/image.jpg"; print("imageFile = example/image.jpg")
 	groups_file = "example/groups.txt"; print("groupsFile = example/groups.txt")
 	tasks = 8; print("TaskCount = 8")
@@ -20,7 +20,8 @@ else:
 
 COL_NAME_LENGTH = 180
 COL_TASK_LENGTH = 75
-REC_SIZE=10
+REC_SIZE=1 #not only picture. Big value can affect on recognition
+#BLACK_THRESHOLD=150
 
 length = COL_NAME_LENGTH + COL_TASK_LENGTH * tasks
 height = 20 * (students + 1)
@@ -34,10 +35,36 @@ gray = cv.cvtColor(im, cv.COLOR_RGB2GRAY)
 blur = cv.blur(gray, (3, 3))
 rows, cols = blur.shape
 res = cv.resize(blur, None, fx = float(length) / cols, fy = float(height) / rows, interpolation = cv.INTER_CUBIC)
-ibin = cv.threshold(res, 127, 255, cv.THRESH_OTSU)[1]
+ibin = cv.adaptiveThreshold(res, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 19, 4)
 # cv.imwrite('ibin.png', ibin)
 # cv.imshow('ibin.png', ibin)
 # cv.waitKey()
+
+# 
+# find best bin-threshold
+# ibin  = cv.threshold(res, BLACK_THRESHOLD, 255,  cv.THRESH_OTSU)[1]
+# cv.imwrite('ibin.png', ibin)
+# ibin1 = cv.threshold(res, BLACK_THRESHOLD, 255, cv.THRESH_BINARY)[1]
+# cv.imwrite('ibin1.png', ibin1)
+# ibin2 = cv.threshold(res, BLACK_THRESHOLD, 255, cv.THRESH_BINARY_INV)[1]
+# cv.imwrite('ibin2.png', ibin2)
+# ibin3 = cv.threshold(res, BLACK_THRESHOLD, 255, cv.THRESH_TRUNC)[1] 
+# cv.imwrite('ibin3.png', ibin3)
+# ibin4 = cv.threshold(res, BLACK_THRESHOLD, 255, cv.THRESH_TOZERO)[1]
+# cv.imwrite('ibin4.png', ibin4)
+# ibin5 = cv.threshold(res, BLACK_THRESHOLD, 255, cv.THRESH_TOZERO_INV)[1]
+# cv.imwrite('ibin5.png', ibin5)
+# ibin6 = cv.adaptiveThreshold(res, 255, cv.ADAPTIVE_THRESH_MEAN_C,  cv.THRESH_BINARY, 11, 2)
+# cv.imwrite('ibin6.png', ibin6)
+# ibin7 = cv.adaptiveThreshold(res, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 11, 2)
+# cv.imwrite('ibin7.png', ibin7)
+# ibin8 = cv.adaptiveThreshold(res, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 19, 3) #
+# cv.imwrite('ibin8.png', ibin8)
+# ibin9 = cv.adaptiveThreshold(res, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 19, 4) #best
+# cv.imwrite('ibin9.png', ibin9)
+
+
+
 
 # get matrix
 field = [[0] * length for i in range(height)]
@@ -64,6 +91,7 @@ for i in range(10, height // 2 - 10):
 				if field[i + l][j + k] == 1:
 					counter += 1
 		rect1.append([counter, j, i])
+
 maximum = 0
 for i in range(len(rect1)):
 	if rect1[i][0] > maximum:
@@ -151,9 +179,9 @@ cv.rectangle(ibin, (rect1x - REC_SIZE, rect1y - REC_SIZE), (rect1x + REC_SIZE, r
 cv.rectangle(ibin, (rect2x - REC_SIZE, rect2y - REC_SIZE), (rect2x + REC_SIZE, rect2y + REC_SIZE), (0, 250, 0), 3)
 cv.rectangle(ibin, (rect3x - REC_SIZE, rect3y - REC_SIZE), (rect3x + REC_SIZE, rect3y + REC_SIZE), (0, 250, 0), 3)
 cv.rectangle(ibin, (rect4x - REC_SIZE, rect4y - REC_SIZE), (rect4x + REC_SIZE, rect4y + REC_SIZE), (0, 250, 0), 3)
-cv.imwrite('ibinwithrect.png', ibin)
-cv.imshow('ibinwithrect.png', ibin)
-cv.waitKey()
+# cv.imwrite('ibinwithrect.png', ibin)
+# cv.imshow('ibinwithrect.png', ibin)
+# cv.waitKey()
 
 # perspective transformation
 pts1 = np.float32([[rect1x, rect1y], [rect3x, rect3y], [rect2x, rect2y], [rect4x, rect4y]])
@@ -267,9 +295,10 @@ def save_result(tasks, students, group, massive):
 	#print (students, ",".join(s.encode('utf-8') for s in group), massive)
 	with open('conduit.csv', 'w') as f_write:
 		f_write.write(str(number) + ';' + ";".join(map(str, num)) + '\n')
-		#for i in range(students):
-		for i in range(5):
-			#f_write.write(';' + ";".join(map(str, massive[i])) + '\n')
-			f_write.write(group[i].encode('utf8') + ';' + ";".join(map(str, massive[i])) + '\n')
+		for i in range(students):
+			if i < len(group):
+				f_write.write(group[i].encode('utf8') + ';' + ";".join(map(str, massive[i])) + '\n')
+			else:
+				f_write.write('UNKNOWN;' + ";".join(map(str, massive[i])) + '\n')
 
 save_result(tasks, students, group, massive)

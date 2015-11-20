@@ -36,7 +36,7 @@ blur = cv.blur(gray, (3, 3))
 rows, cols = blur.shape
 res = cv.resize(blur, None, fx = float(length) / cols, fy = float(height) / rows, interpolation = cv.INTER_CUBIC)
 ibin = cv.adaptiveThreshold(res, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 19, 4)
-# cv.imwrite('ibin.png', ibin)
+cv.imwrite('ibin.png', ibin)
 # cv.imshow('ibin.png', ibin)
 # cv.waitKey()
 
@@ -62,8 +62,6 @@ ibin = cv.adaptiveThreshold(res, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_B
 # cv.imwrite('ibin8.png', ibin8)
 # ibin9 = cv.adaptiveThreshold(res, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 19, 4) #best
 # cv.imwrite('ibin9.png', ibin9)
-
-
 
 
 # get matrix
@@ -200,35 +198,39 @@ for i in range(length):
 			fieldnew[j][i] = 1
 
 # find lines
-maxline = 0
-lineshor = []
-for k in range(students):
-	maxcount = 0
-	for i in range(20 + 20 * k - 5, 20 + 20 * k + 5):
-		counter = 0
-		for j in range(length):
-			counter += fieldnew[i][j]
-		if counter > maxcount:
-			maxcount = counter
-			maxline = i
-	lineshor.append(maxline)
-lineshor.append(height)
+def find_horizontal_lines(students, fieldnew):
+	maxline = 0
+	lineshor = []
+	for k in range(students):
+		maxcount = 0
+		for i in range(20 + 20 * k - 5, 20 + 20 * k + 5):
+			counter = 0
+			for j in range(length):
+				counter += fieldnew[i][j]
+			if counter > maxcount:
+				maxcount = counter
+				maxline = i
+		lineshor.append(maxline)
+	lineshor.append(height)
+	return lineshor
 # for i in range(len(lineshor)):
 # 	dst = cv.rectangle(dst, (0, lineshor[i] - 3), (3, lineshor[i]), (0, 250, 0), 3)
 # print lineshor
-maxline = 0
-linesvert = []
-for k in range(tasks):
-	maxcount = 0
-	for j in range(COL_NAME_LENGTH + COL_TASK_LENGTH * k - 10, COL_NAME_LENGTH + COL_TASK_LENGTH * k + 10):
-		counter = 0
-		for i in range(height):
-			counter += fieldnew[i][j]
-		if counter > maxcount:
-			maxcount = counter
-			maxline = j
-	linesvert.append(maxline)
-linesvert.append(length)
+def find_vertical_lines(tasks, fieldnew):
+	maxline = 0
+	linesvert = []
+	for k in range(tasks):
+		maxcount = 0
+		for j in range(COL_NAME_LENGTH + COL_TASK_LENGTH * k - 10, COL_NAME_LENGTH + COL_TASK_LENGTH * k + 10):
+			counter = 0
+			for i in range(height):
+				counter += fieldnew[i][j]
+			if counter > maxcount:
+				maxcount = counter
+				maxline = j
+		linesvert.append(maxline)
+	linesvert.append(length)
+	return linesvert
 # for i in range(len(linesvert)):
 # 	dst = cv.rectangle(dst, (linesvert[i] - 3, 0), (linesvert[i], 3), (0, 250, 0), 3)
 # print linesvert
@@ -237,68 +239,79 @@ linesvert.append(length)
 # cv.waitKey()
 
 # make massive with pluses
-massive = []
-massive = [[" "] * tasks for i in range(students)]
-for k in range(tasks):
-	for l in range(students):
-		counter = 0
-		for i in range(lineshor[l] + 4, lineshor[l + 1] - 4):
-			for j in range(linesvert[k] + 4, linesvert[k + 1] - 4):
-				counter += fieldnew[i][j]
-		if counter >= 1:
-			massive[l][k] = "+"
-		else:
-			massive[l][k] = "-"
+def make_massive_with_pluses(tasks, students, lineshor, linesvert, fieldnew):
+	massive = []
+	massive = [[" "] * tasks for i in range(students)]
+	for k in range(tasks):
+		for l in range(students):
+			counter = 0
+			for i in range(lineshor[l] + 4, lineshor[l + 1] - 4):
+				for j in range(linesvert[k] + 4, linesvert[k + 1] - 4):
+					counter += fieldnew[i][j]
+			if counter >= 1:
+				massive[l][k] = "+"
+			else:
+				massive[l][k] = "-"
+	return massive
 		# roi = dst[lineshor[l] : lineshor[l + 1], linesvert[k] : linesvert[k + 1]]
 		# cv.imwrite(str("roi") + str(8 * l + k) + str(".png"), roi)
 		# cv.waitKey()
 
 # find out number of group
-verticals = []
-for j in range(5, 175):
-	counter = 0
-	for i in range(20):
-		counter += fieldnew[i][j]
-	if counter >= 6:
-		verticals.append([counter, j])
-number = len(verticals)
-if number != 1:
-	for i in range(len(verticals) - 1):
-		if abs(verticals[i + 1][1] - verticals[i][1]) < 5:
-			number -= 1
+def find_out_group_index(fieldnew):
+	verticals = []
+	for j in range(5, 175):
+		counter = 0
+		for i in range(20):
+			counter += fieldnew[i][j]
+		if counter >= 6:
+			verticals.append([counter, j])
+	group_index = len(verticals)
+	if group_index != 1:
+		for i in range(len(verticals) - 1):
+			if abs(verticals[i + 1][1] - verticals[i][1]) < 5:
+				group_index -= 1
+	return group_index
+
 
 # make dictionary with surnames
-surnames = []
-with open(groups_file, 'r') as f_read:
-	for line in f_read:
-		surnames.append(line.decode(encoding = "utf8"))
-groups = [0]
-for i in range(len(surnames)):
-	if len(surnames[i]) == 2:
-		groups.append(i)
-group = []
-if number == len(groups):
-	for i in range(groups[number - 1] + 1, len(surnames) - 1):
-		group.append(surnames[i][:-1])
-	group.append(surnames[-1])
-else:
-	for i in range(groups[number - 1] + 1, groups[number]):
-		group.append(surnames[i][:-1])
+def make_dictionary_with_surnames(group_index):
+	surnames = []
+	with open(groups_file, 'r') as f_read:
+		for line in f_read:
+			surnames.append(line.decode(encoding = "utf8"))
+	groups = [0]
+	for i in range(len(surnames)):
+		if len(surnames[i]) == 2:
+			groups.append(i)
+	group = []
+	if group_index == len(groups):
+		for i in range(groups[group_index - 1] + 1, len(surnames) - 1):
+			group.append(surnames[i][:-1])
+		group.append(surnames[-1])
+	else:
+		for i in range(groups[group_index - 1] + 1, groups[group_index]):
+			group.append(surnames[i][:-1])
+	return group
 
 # make file with pluses	
-
-def save_result(tasks, students, group, massive):
+def make_file_with_pluses(tasks, students, group, massive, group_index):
 	num = []
 	for i in range(tasks):
 		num.append(i + 1)
 
 	#print (students, ",".join(s.encode('utf-8') for s in group), massive)
 	with open('conduit.csv', 'w') as f_write:
-		f_write.write(str(number) + ';' + ";".join(map(str, num)) + '\n')
+		f_write.write(str(group_index) + ';' + ";".join(map(str, num)) + '\n')
 		for i in range(students):
 			if i < len(group):
 				f_write.write(group[i].encode('utf8') + ';' + ";".join(map(str, massive[i])) + '\n')
 			else:
 				f_write.write('UNKNOWN;' + ";".join(map(str, massive[i])) + '\n')
 
-save_result(tasks, students, group, massive)
+lineshor = find_horizontal_lines(students, fieldnew)
+linesvert = find_vertical_lines(tasks, fieldnew)
+massive = make_massive_with_pluses(tasks, students, lineshor, linesvert, fieldnew)
+group_index = find_out_group_index(fieldnew)
+group = make_dictionary_with_surnames(group_index)
+make_file_with_pluses(tasks, students, group, massive, group_index)

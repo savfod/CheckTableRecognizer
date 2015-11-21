@@ -34,8 +34,9 @@ def make_binary_image(cv, height, length):
 	gray = cv.cvtColor(im, cv.COLOR_RGB2GRAY)
 	blur = cv.blur(gray, (3, 3))
 	rows, cols = blur.shape
-	res = cv.resize(blur, None, fx = float(length) / cols, fy = float(height) / rows, interpolation = cv.INTER_CUBIC)
-	ibin = cv.adaptiveThreshold(res, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 19, 4)
+	# res = cv.resize(blur, None, fx = float(length) / cols, fy = float(height) / rows, interpolation = cv.INTER_CUBIC)
+	# TODO - appropriate resize for good black square sizes
+	ibin = cv.adaptiveThreshold(blur, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 19, 4)
 	cv.imwrite('ibin.png', ibin)
 	# cv.imshow('ibin.png', ibin)
 	# cv.waitKey()
@@ -172,7 +173,7 @@ def find_rectangles(field):
 	cv.rectangle(ibin, (rect2x - REC_SIZE, rect2y - REC_SIZE), (rect2x + REC_SIZE, rect2y + REC_SIZE), (0, 250, 0), 3)
 	cv.rectangle(ibin, (rect3x - REC_SIZE, rect3y - REC_SIZE), (rect3x + REC_SIZE, rect3y + REC_SIZE), (0, 250, 0), 3)
 	cv.rectangle(ibin, (rect4x - REC_SIZE, rect4y - REC_SIZE), (rect4x + REC_SIZE, rect4y + REC_SIZE), (0, 250, 0), 3)
-	# cv.imwrite('ibinwithrect.png', ibin)
+	cv.imwrite('ibinwithrect.png', ibin)
 	# cv.imshow('ibinwithrect.png', ibin)
 	# cv.waitKey()
 	return rect1x, rect1y, rect2x, rect2y, rect3x, rect3y, rect4x, rect4y
@@ -185,7 +186,8 @@ def make_perspective_transformation(coords, ibin, height, length):
 	pts2 = np.float32([[0, 0], [length, 0],[0, height], [length, height]])
 	M = cv.getPerspectiveTransform(pts1, pts2)
 	dst = cv.warpPerspective(ibin, M, (length, height))
-	# cv.imwrite('persptrans.png', dst)
+
+	cv.imwrite('persptrans.png', dst)
 	# cv.imshow('persptrans.png', dst)
 	# cv.waitKey()
 	return dst

@@ -23,182 +23,183 @@ COL_TASK_LENGTH = 75
 REC_SIZE=1 #not only picture. Big value can affect on recognition
 #BLACK_THRESHOLD=150
 
-length = COL_NAME_LENGTH + COL_TASK_LENGTH * tasks
-height = 20 * (students + 1)
+def calc_sizes():
+	height = 20 * (students + 1)
+	length = COL_NAME_LENGTH + COL_TASK_LENGTH * tasks
+	return height, length
 
+# load and binary imagine
+def make_binary_image(cv, height, length):
+	im = cv.imread(image_file, 1)
+	gray = cv.cvtColor(im, cv.COLOR_RGB2GRAY)
+	blur = cv.blur(gray, (3, 3))
+	rows, cols = blur.shape
+	res = cv.resize(blur, None, fx = float(length) / cols, fy = float(height) / rows, interpolation = cv.INTER_CUBIC)
+	ibin = cv.adaptiveThreshold(res, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 19, 4)
+	cv.imwrite('ibin.png', ibin)
+	# cv.imshow('ibin.png', ibin)
+	# cv.waitKey()
 
-# load imagine
-im = cv.imread(image_file, 1)
-
-# binary imagine
-gray = cv.cvtColor(im, cv.COLOR_RGB2GRAY)
-blur = cv.blur(gray, (3, 3))
-rows, cols = blur.shape
-res = cv.resize(blur, None, fx = float(length) / cols, fy = float(height) / rows, interpolation = cv.INTER_CUBIC)
-ibin = cv.adaptiveThreshold(res, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 19, 4)
-cv.imwrite('ibin.png', ibin)
-# cv.imshow('ibin.png', ibin)
-# cv.waitKey()
-
-# 
-# find best bin-threshold
-# ibin  = cv.threshold(res, BLACK_THRESHOLD, 255,  cv.THRESH_OTSU)[1]
-# cv.imwrite('ibin.png', ibin)
-# ibin1 = cv.threshold(res, BLACK_THRESHOLD, 255, cv.THRESH_BINARY)[1]
-# cv.imwrite('ibin1.png', ibin1)
-# ibin2 = cv.threshold(res, BLACK_THRESHOLD, 255, cv.THRESH_BINARY_INV)[1]
-# cv.imwrite('ibin2.png', ibin2)
-# ibin3 = cv.threshold(res, BLACK_THRESHOLD, 255, cv.THRESH_TRUNC)[1] 
-# cv.imwrite('ibin3.png', ibin3)
-# ibin4 = cv.threshold(res, BLACK_THRESHOLD, 255, cv.THRESH_TOZERO)[1]
-# cv.imwrite('ibin4.png', ibin4)
-# ibin5 = cv.threshold(res, BLACK_THRESHOLD, 255, cv.THRESH_TOZERO_INV)[1]
-# cv.imwrite('ibin5.png', ibin5)
-# ibin6 = cv.adaptiveThreshold(res, 255, cv.ADAPTIVE_THRESH_MEAN_C,  cv.THRESH_BINARY, 11, 2)
-# cv.imwrite('ibin6.png', ibin6)
-# ibin7 = cv.adaptiveThreshold(res, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 11, 2)
-# cv.imwrite('ibin7.png', ibin7)
-# ibin8 = cv.adaptiveThreshold(res, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 19, 3) #
-# cv.imwrite('ibin8.png', ibin8)
-# ibin9 = cv.adaptiveThreshold(res, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 19, 4) #best
-# cv.imwrite('ibin9.png', ibin9)
-
-
-# get matrix
-field = [[0] * length for i in range(height)]
-for i in range(length):
-	for j in range(height):
-		if ibin[j, i] == 0:
-			field[j][i] = 1
+	# 
+	# find best bin-threshold
+	# ibin  = cv.threshold(res, BLACK_THRESHOLD, 255,  cv.THRESH_OTSU)[1]
+	# cv.imwrite('ibin.png', ibin)
+	# ibin1 = cv.threshold(res, BLACK_THRESHOLD, 255, cv.THRESH_BINARY)[1]
+	# cv.imwrite('ibin1.png', ibin1)
+	# ibin2 = cv.threshold(res, BLACK_THRESHOLD, 255, cv.THRESH_BINARY_INV)[1]
+	# cv.imwrite('ibin2.png', ibin2)
+	# ibin3 = cv.threshold(res, BLACK_THRESHOLD, 255, cv.THRESH_TRUNC)[1] 
+	# cv.imwrite('ibin3.png', ibin3)
+	# ibin4 = cv.threshold(res, BLACK_THRESHOLD, 255, cv.THRESH_TOZERO)[1]
+	# cv.imwrite('ibin4.png', ibin4)
+	# ibin5 = cv.threshold(res, BLACK_THRESHOLD, 255, cv.THRESH_TOZERO_INV)[1]
+	# cv.imwrite('ibin5.png', ibin5)
+	# ibin6 = cv.adaptiveThreshold(res, 255, cv.ADAPTIVE_THRESH_MEAN_C,  cv.THRESH_BINARY, 11, 2)
+	# cv.imwrite('ibin6.png', ibin6)
+	# ibin7 = cv.adaptiveThreshold(res, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 11, 2)
+	# cv.imwrite('ibin7.png', ibin7)
+	# ibin8 = cv.adaptiveThreshold(res, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 19, 3) #
+	# cv.imwrite('ibin8.png', ibin8)
+	# ibin9 = cv.adaptiveThreshold(res, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 19, 4) #best
+	# cv.imwrite('ibin9.png', ibin9)
+	return ibin
 
 # find 4 rectangles
-rect1 = []
-for i in range(10, height // 2 - 10):
-	for j in range(10, length // 2 - 10):
-		counter = 0
-		for l in range(9):
-			for k in range(9):
-				if field[i - l][j - k] == 1:
-					counter += 1
-				if field[i - l - 1][j + k + 1] == 0:
-					counter += 1
-				if field[i + l + 1][j - k - 1] == 0:
-					counter += 1
-		for l in range(4):
-			for k in range(4):
-				if field[i + l][j + k] == 1:
-					counter += 1
-		rect1.append([counter, j, i])
+def find_rectangles(field, height, length):
+	rect1 = []
+	for i in range(10, height // 2 - 10):
+		for j in range(10, length // 2 - 10):
+			counter = 0
+			for l in range(9):
+				for k in range(9):
+					if field[i - l][j - k] == 1:
+						counter += 1
+					if field[i - l - 1][j + k + 1] == 0:
+						counter += 1
+					if field[i + l + 1][j - k - 1] == 0:
+						counter += 1
+			for l in range(4):
+				for k in range(4):
+					if field[i + l][j + k] == 1:
+						counter += 1
+			rect1.append([counter, j, i])
 
-maximum = 0
-for i in range(len(rect1)):
-	if rect1[i][0] > maximum:
-		maximum = rect1[i][0]
-		rect1x = rect1[i][1]
-		rect1y = rect1[i][2]
+	maximum = 0
+	for i in range(len(rect1)):
+		if rect1[i][0] > maximum:
+			maximum = rect1[i][0]
+			rect1x = rect1[i][1]
+			rect1y = rect1[i][2]
 
-rect2 = []
-for i in range(height // 2 + 10, height - 10):
-	for j in range(10, length // 2 - 10):
-		counter = 0
-		for l in range(9):
-			for k in range(9):
-				if field[i + l][j - k] == 1:
-					counter += 1
-				if field[i - l - 1][j - k - 1] == 0:
-					counter += 1
-				if field[i + l + 1][j + k + 1] == 0:
-					counter += 1
-		for l in range(4):
-			for k in range(4):
-				if field[i - l][j + k] == 1:
-					counter += 1
-		rect2.append([counter, j, i])
-maximum = 0
-for i in range(len(rect1)):
-	if rect2[i][0] > maximum:
-		maximum = rect2[i][0]
-		rect2x = rect2[i][1]
-		rect2y = rect2[i][2]
+	rect2 = []
+	for i in range(height // 2 + 10, height - 10):
+		for j in range(10, length // 2 - 10):
+			counter = 0
+			for l in range(9):
+				for k in range(9):
+					if field[i + l][j - k] == 1:
+						counter += 1
+					if field[i - l - 1][j - k - 1] == 0:
+						counter += 1
+					if field[i + l + 1][j + k + 1] == 0:
+						counter += 1
+			for l in range(4):
+				for k in range(4):
+					if field[i - l][j + k] == 1:
+						counter += 1
+			rect2.append([counter, j, i])
+	maximum = 0
+	for i in range(len(rect1)):
+		if rect2[i][0] > maximum:
+			maximum = rect2[i][0]
+			rect2x = rect2[i][1]
+			rect2y = rect2[i][2]
 
-rect3 = []
-for i in range(10, height // 2 - 10):
-	for j in range(length // 2 + 10, length - 10):
-		counter = 0
-		for l in range(9):
-			for k in range(9):
-				if field[i - l][j + k] == 1:
-					counter += 1
-				if field[i - l - 1][j - k - 1] == 0:
-					counter += 1
-				if field[i + l + 1][j + k + 1] == 0:
-					counter += 1
-		for l in range(4):
-			for k in range(4):
-				if field[i + l][j - k] == 1:
-					counter += 1
-		rect3.append([counter, j, i])
-maximum = 0
-for i in range(len(rect1)):
-	if rect3[i][0] > maximum:
-		maximum = rect3[i][0]
-		rect3x = rect3[i][1]
-		rect3y = rect3[i][2]
+	rect3 = []
+	for i in range(10, height // 2 - 10):
+		for j in range(length // 2 + 10, length - 10):
+			counter = 0
+			for l in range(9):
+				for k in range(9):
+					if field[i - l][j + k] == 1:
+						counter += 1
+					if field[i - l - 1][j - k - 1] == 0:
+						counter += 1
+					if field[i + l + 1][j + k + 1] == 0:
+						counter += 1
+			for l in range(4):
+				for k in range(4):
+					if field[i + l][j - k] == 1:
+						counter += 1
+			rect3.append([counter, j, i])
+	maximum = 0
+	for i in range(len(rect1)):
+		if rect3[i][0] > maximum:
+			maximum = rect3[i][0]
+			rect3x = rect3[i][1]
+			rect3y = rect3[i][2]
 
-rect4 = []
-for i in range(height // 2 + 10, height - 10):
-	for j in range(length // 2 + 10, length - 10):
-		counter = 0
-		for l in range(9):
-			for k in range(9):
-				if field[i + l][j + k] == 1:
-					counter += 1
-				if field[i - l - 1][j + k + 1] == 0:
-					counter += 1
-				if field[i + l + 1][j - k - 1] == 0:
-					counter += 1
-		for l in range(4):
-			for k in range(4):
-				if field[i - l][j - k] == 1:
-					counter += 1
-		rect4.append([counter, j, i])
-maximum = 0
-for i in range(len(rect4)):
-	if rect4[i][0] > maximum:
-		maximum = rect4[i][0]
-		rect4x = rect4[i][1]
-		rect4y = rect4[i][2]
+	rect4 = []
+	for i in range(height // 2 + 10, height - 10):
+		for j in range(length // 2 + 10, length - 10):
+			counter = 0
+			for l in range(9):
+				for k in range(9):
+					if field[i + l][j + k] == 1:
+						counter += 1
+					if field[i - l - 1][j + k + 1] == 0:
+						counter += 1
+					if field[i + l + 1][j - k - 1] == 0:
+						counter += 1
+			for l in range(4):
+				for k in range(4):
+					if field[i - l][j - k] == 1:
+						counter += 1
+			rect4.append([counter, j, i])
+	maximum = 0
+	for i in range(len(rect4)):
+		if rect4[i][0] > maximum:
+			maximum = rect4[i][0]
+			rect4x = rect4[i][1]
+			rect4y = rect4[i][2]
 
-# print rect1x, rect1y
-# print rect2x, rect2y
-# print rect3x, rect3y
-# print rect4x, rect4y
-cv.rectangle(ibin, (rect1x - REC_SIZE, rect1y - REC_SIZE), (rect1x + REC_SIZE, rect1y + REC_SIZE), (0, 250, 0), 3)
-cv.rectangle(ibin, (rect2x - REC_SIZE, rect2y - REC_SIZE), (rect2x + REC_SIZE, rect2y + REC_SIZE), (0, 250, 0), 3)
-cv.rectangle(ibin, (rect3x - REC_SIZE, rect3y - REC_SIZE), (rect3x + REC_SIZE, rect3y + REC_SIZE), (0, 250, 0), 3)
-cv.rectangle(ibin, (rect4x - REC_SIZE, rect4y - REC_SIZE), (rect4x + REC_SIZE, rect4y + REC_SIZE), (0, 250, 0), 3)
-# cv.imwrite('ibinwithrect.png', ibin)
-# cv.imshow('ibinwithrect.png', ibin)
-# cv.waitKey()
+	# print rect1x, rect1y
+	# print rect2x, rect2y
+	# print rect3x, rect3y
+	# print rect4x, rect4y
+	cv.rectangle(ibin, (rect1x - REC_SIZE, rect1y - REC_SIZE), (rect1x + REC_SIZE, rect1y + REC_SIZE), (0, 250, 0), 3)
+	cv.rectangle(ibin, (rect2x - REC_SIZE, rect2y - REC_SIZE), (rect2x + REC_SIZE, rect2y + REC_SIZE), (0, 250, 0), 3)
+	cv.rectangle(ibin, (rect3x - REC_SIZE, rect3y - REC_SIZE), (rect3x + REC_SIZE, rect3y + REC_SIZE), (0, 250, 0), 3)
+	cv.rectangle(ibin, (rect4x - REC_SIZE, rect4y - REC_SIZE), (rect4x + REC_SIZE, rect4y + REC_SIZE), (0, 250, 0), 3)
+	# cv.imwrite('ibinwithrect.png', ibin)
+	# cv.imshow('ibinwithrect.png', ibin)
+	# cv.waitKey()
+	return rect1x, rect1y, rect2x, rect2y, rect3x, rect3y, rect4x, rect4y
+
 
 # perspective transformation
-pts1 = np.float32([[rect1x, rect1y], [rect3x, rect3y], [rect2x, rect2y], [rect4x, rect4y]])
-pts2 = np.float32([[0, 0], [length, 0],[0, height], [length, height]])
-M = cv.getPerspectiveTransform(pts1, pts2)
-dst = cv.warpPerspective(ibin, M, (length, height))
-# cv.imwrite('persptrans.png', dst)
-# cv.imshow('persptrans.png', dst)
-# cv.waitKey()
+def make_perspective_transformation(coords, ibin, height, length):
+	rect1x, rect1y, rect2x, rect2y, rect3x, rect3y, rect4x, rect4y = coords
+	pts1 = np.float32([[rect1x, rect1y], [rect3x, rect3y], [rect2x, rect2y], [rect4x, rect4y]])
+	pts2 = np.float32([[0, 0], [length, 0],[0, height], [length, height]])
+	M = cv.getPerspectiveTransform(pts1, pts2)
+	dst = cv.warpPerspective(ibin, M, (length, height))
+	# cv.imwrite('persptrans.png', dst)
+	# cv.imshow('persptrans.png', dst)
+	# cv.waitKey()
+	return dst
 
 # get matrix
-fieldnew = [[0] * length for i in range(height)]
-for i in range(length):
-	for j in range(height):
-		if dst[j, i] == 0:
-			fieldnew[j][i] = 1
+def get_matrix(dst, height, length):
+	fieldnew = [[0] * length for i in range(height)]
+	for i in range(length):
+		for j in range(height):
+			if dst[j, i] == 0:
+				fieldnew[j][i] = 1
+	return fieldnew
 
 # find lines
-def find_horizontal_lines(students, fieldnew):
+def find_horizontal_lines(students, fieldnew, height, length):
 	maxline = 0
 	lineshor = []
 	for k in range(students):
@@ -216,7 +217,7 @@ def find_horizontal_lines(students, fieldnew):
 # for i in range(len(lineshor)):
 # 	dst = cv.rectangle(dst, (0, lineshor[i] - 3), (3, lineshor[i]), (0, 250, 0), 3)
 # print lineshor
-def find_vertical_lines(tasks, fieldnew):
+def find_vertical_lines(tasks, fieldnew, height, length):
 	maxline = 0
 	linesvert = []
 	for k in range(tasks):
@@ -309,8 +310,14 @@ def make_file_with_pluses(tasks, students, group, massive, group_index):
 			else:
 				f_write.write('UNKNOWN;' + ";".join(map(str, massive[i])) + '\n')
 
-lineshor = find_horizontal_lines(students, fieldnew)
-linesvert = find_vertical_lines(tasks, fieldnew)
+height_local, length_local = calc_sizes()
+ibin = make_binary_image(cv, height_local, length_local)
+field = get_matrix(ibin, height_local, length_local)
+coords = find_rectangles(field, height_local, length_local)
+dst = make_perspective_transformation(coords, ibin, height_local, length_local)
+fieldnew = get_matrix(dst, height_local, length_local)
+lineshor = find_horizontal_lines(students, fieldnew, height_local, length_local)
+linesvert = find_vertical_lines(tasks, fieldnew, height_local, length_local)
 massive = make_massive_with_pluses(tasks, students, lineshor, linesvert, fieldnew)
 group_index = find_out_group_index(fieldnew)
 group = make_dictionary_with_surnames(group_index)

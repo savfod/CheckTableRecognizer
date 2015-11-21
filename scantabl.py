@@ -65,7 +65,8 @@ def make_binary_image(cv, height, length):
 	return ibin
 
 # find 4 rectangles
-def find_rectangles(field, height, length):
+def find_rectangles(field):
+	height, length = len(field), len(field[0])
 	rect1 = []
 	for i in range(10, height // 2 - 10):
 		for j in range(10, length // 2 - 10):
@@ -190,7 +191,8 @@ def make_perspective_transformation(coords, ibin, height, length):
 	return dst
 
 # get matrix
-def get_matrix(dst, height, length):
+def get_matrix(dst):
+	height, length = dst.shape
 	fieldnew = [[0] * length for i in range(height)]
 	for i in range(length):
 		for j in range(height):
@@ -199,7 +201,8 @@ def get_matrix(dst, height, length):
 	return fieldnew
 
 # find lines
-def find_horizontal_lines(students, fieldnew, height, length):
+def find_horizontal_lines(students, fieldnew):
+	height, length = len(fieldnew), len(fieldnew[0])
 	maxline = 0
 	lineshor = []
 	for k in range(students):
@@ -217,7 +220,8 @@ def find_horizontal_lines(students, fieldnew, height, length):
 # for i in range(len(lineshor)):
 # 	dst = cv.rectangle(dst, (0, lineshor[i] - 3), (3, lineshor[i]), (0, 250, 0), 3)
 # print lineshor
-def find_vertical_lines(tasks, fieldnew, height, length):
+def find_vertical_lines(tasks, fieldnew):
+	height, length = len(fieldnew), len(fieldnew[0])
 	maxline = 0
 	linesvert = []
 	for k in range(tasks):
@@ -312,12 +316,12 @@ def make_file_with_pluses(tasks, students, group, massive, group_index):
 
 height, length = calc_sizes()
 ibin = make_binary_image(cv, height, length)
-field = get_matrix(ibin, height, length)
-coords = find_rectangles(field, height, length)
+field = get_matrix(ibin)
+coords = find_rectangles(field)
 dst = make_perspective_transformation(coords, ibin, height, length)
-fieldnew = get_matrix(dst, height, length)
-lineshor = find_horizontal_lines(students, fieldnew, height, length)
-linesvert = find_vertical_lines(tasks, fieldnew, height, length)
+fieldnew = get_matrix(dst)
+lineshor = find_horizontal_lines(students, fieldnew)
+linesvert = find_vertical_lines(tasks, fieldnew)
 massive = make_massive_with_pluses(tasks, students, lineshor, linesvert, fieldnew)
 group_index = find_out_group_index(fieldnew)
 group = make_dictionary_with_surnames(group_index)

@@ -20,11 +20,14 @@ else:
 
 COL_NAME_LENGTH = 180
 COL_TASK_LENGTH = 75
+COL_TASK_HEIGHT = 20
 REC_SIZE=1 #not only picture. Big value can affect on recognition
-#BLACK_THRESHOLD=150
+INDENT=8 #cell indent from lines
+PLUS_THRESHOLD = 10
+BLACK_THRESHOLD=100
 
 def calc_sizes():
-	height = 20 * (students + 1)
+	height = COL_TASK_HEIGHT * (students + 1)
 	length = COL_NAME_LENGTH + COL_TASK_LENGTH * tasks
 	return height, length
 
@@ -36,7 +39,7 @@ def make_binary_image(cv, height, length):
 	rows, cols = blur.shape
 	# res = cv.resize(blur, None, fx = float(length) / cols, fy = float(height) / rows, interpolation = cv.INTER_CUBIC)
 	# TODO - appropriate resize for good black square sizes
-	ibin = cv.adaptiveThreshold(blur, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 19, 4)
+	ibin = cv.adaptiveThreshold(blur, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 99, 4)
 	cv.imwrite('ibin.png', ibin)
 	# cv.imshow('ibin.png', ibin)
 	# cv.waitKey()
@@ -173,7 +176,7 @@ def find_rectangles(field):
 	cv.rectangle(ibin, (rect2x - REC_SIZE, rect2y - REC_SIZE), (rect2x + REC_SIZE, rect2y + REC_SIZE), (0, 250, 0), 3)
 	cv.rectangle(ibin, (rect3x - REC_SIZE, rect3y - REC_SIZE), (rect3x + REC_SIZE, rect3y + REC_SIZE), (0, 250, 0), 3)
 	cv.rectangle(ibin, (rect4x - REC_SIZE, rect4y - REC_SIZE), (rect4x + REC_SIZE, rect4y + REC_SIZE), (0, 250, 0), 3)
-	cv.imwrite('ibinwithrect.png', ibin)
+	# cv.imwrite('ibinwithrect.png', ibin)
 	# cv.imshow('ibinwithrect.png', ibin)
 	# cv.waitKey()
 	return rect1x, rect1y, rect2x, rect2y, rect3x, rect3y, rect4x, rect4y
@@ -186,11 +189,35 @@ def make_perspective_transformation(coords, ibin, height, length):
 	pts2 = np.float32([[0, 0], [length, 0],[0, height], [length, height]])
 	M = cv.getPerspectiveTransform(pts1, pts2)
 	dst = cv.warpPerspective(ibin, M, (length, height))
+	# dst_bin = cv.adaptiveThreshold(dst, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 99, 1)
+	dst_bin  = cv.threshold(dst, BLACK_THRESHOLD, 255,  cv.THRESH_BINARY)[1]
 
-	cv.imwrite('persptrans.png', dst)
-	# cv.imshow('persptrans.png', dst)
+	# find best bin-threshold
+	# ibin  = cv.threshold(dst, BLACK_THRESHOLD, 255,  cv.THRESH_OTSU)[1]
+	# cv.imwrite('ibin.png', ibin)
+	# ibin1 = cv.threshold(dst, BLACK_THRESHOLD, 255, cv.THRESH_BINARY)[1]
+	# cv.imwrite('ibin1.png', ibin1)
+	# ibin2 = cv.threshold(dst, BLACK_THRESHOLD, 255, cv.THRESH_BINARY_INV)[1]
+	# cv.imwrite('ibin2.png', ibin2)
+	# ibin3 = cv.threshold(dst, BLACK_THRESHOLD, 255, cv.THRESH_TRUNC)[1] 
+	# cv.imwrite('ibin3.png', ibin3)
+	# ibin4 = cv.threshold(dst, BLACK_THRESHOLD, 255, cv.THRESH_TOZERO)[1]
+	# cv.imwrite('ibin4.png', ibin4)
+	# ibin5 = cv.threshold(dst, BLACK_THRESHOLD, 255, cv.THRESH_TOZERO_INV)[1]
+	# cv.imwrite('ibin5.png', ibin5)
+	# ibin6 = cv.adaptiveThreshold(dst, 255, cv.ADAPTIVE_THRESH_MEAN_C,  cv.THRESH_BINARY, 11, 2)
+	# cv.imwrite('ibin6.png', ibin6)
+	# ibin7 = cv.adaptiveThreshold(dst, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 11, 2)
+	# cv.imwrite('ibin7.png', ibin7)
+	# ibin8 = cv.adaptiveThreshold(dst, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 19, 3) #
+	# cv.imwrite('ibin8.png', ibin8)
+	# ibin9 = cv.adaptiveThreshold(dst, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 19, 4) #best
+	# cv.imwrite('ibin9.png', ibin9)
+
+	cv.imwrite('persptrans.png', dst_bin)
+	# cv.imshow('persptrans.png', dst_bin)
 	# cv.waitKey()
-	return dst
+	return dst_bin
 
 # get matrix
 def get_matrix(dst):
@@ -203,13 +230,13 @@ def get_matrix(dst):
 	return fieldnew
 
 # find lines
-def find_horizontal_lines(students, fieldnew):
+def find_horizontal_lines(students, fieldnew, dst):
 	height, length = len(fieldnew), len(fieldnew[0])
 	maxline = 0
 	lineshor = []
 	for k in range(students):
-		maxcount = 0
-		for i in range(20 + 20 * k - 5, 20 + 20 * k + 5):
+		maxcount = 0	
+		for i in range(COL_TASK_HEIGHT + COL_TASK_HEIGHT * k - COL_TASK_HEIGHT/3, COL_TASK_HEIGHT + COL_TASK_HEIGHT * k + COL_TASK_HEIGHT/3):
 			counter = 0
 			for j in range(length):
 				counter += fieldnew[i][j]
@@ -218,11 +245,16 @@ def find_horizontal_lines(students, fieldnew):
 				maxline = i
 		lineshor.append(maxline)
 	lineshor.append(height)
+
+	#print debug image
+	dst_copy = np.copy(dst)
+	for i in range(len(lineshor)):
+		cv.rectangle(dst_copy, (0, lineshor[i] - 2), (1000, lineshor[i] + 2), (0, 250, 0), 2)
+	cv.imwrite('dstwithhorlines.png', dst_copy)
+
 	return lineshor
-# for i in range(len(lineshor)):
-# 	dst = cv.rectangle(dst, (0, lineshor[i] - 3), (3, lineshor[i]), (0, 250, 0), 3)
-# print lineshor
-def find_vertical_lines(tasks, fieldnew):
+
+def find_vertical_lines(tasks, fieldnew, dst):
 	height, length = len(fieldnew), len(fieldnew[0])
 	maxline = 0
 	linesvert = []
@@ -237,13 +269,16 @@ def find_vertical_lines(tasks, fieldnew):
 				maxline = j
 		linesvert.append(maxline)
 	linesvert.append(length)
+	
+	#print debug image
+	dst_copy = np.copy(dst)
+	for i in range(len(linesvert)):
+		cv.rectangle(dst_copy, (linesvert[i] - 3, 0), (linesvert[i]+3, 500), (0, 250, 0), 6)
+	cv.imwrite('dstwithverlines.png', dst_copy)
+	# cv.imshow('dstwithlines.png', dst)
+	# cv.waitKey()
+	
 	return linesvert
-# for i in range(len(linesvert)):
-# 	dst = cv.rectangle(dst, (linesvert[i] - 3, 0), (linesvert[i], 3), (0, 250, 0), 3)
-# print linesvert
-# cv.imwrite('dstwithlines.png', dst)
-# cv.imshow('dstwithlines.png', dst)
-# cv.waitKey()
 
 # make massive with pluses
 def make_massive_with_pluses(tasks, students, lineshor, linesvert, fieldnew):
@@ -252,10 +287,10 @@ def make_massive_with_pluses(tasks, students, lineshor, linesvert, fieldnew):
 	for k in range(tasks):
 		for l in range(students):
 			counter = 0
-			for i in range(lineshor[l] + 4, lineshor[l + 1] - 4):
-				for j in range(linesvert[k] + 4, linesvert[k + 1] - 4):
+			for i in range(lineshor[l] + INDENT, lineshor[l + 1] - INDENT):
+				for j in range(linesvert[k] + INDENT, linesvert[k + 1] - INDENT):
 					counter += fieldnew[i][j]
-			if counter >= 1:
+			if counter >= PLUS_THRESHOLD:
 				massive[l][k] = "+"
 			else:
 				massive[l][k] = "-"
@@ -266,18 +301,23 @@ def make_massive_with_pluses(tasks, students, lineshor, linesvert, fieldnew):
 
 # find out number of group
 def find_out_group_index(fieldnew):
+	VERTICAL_THRESHOLD = 2*COL_TASK_HEIGHT/3
 	verticals = []
-	for j in range(5, 175):
+	for j in range(5, COL_NAME_LENGTH-5):
 		counter = 0
-		for i in range(20):
+		for i in range(COL_TASK_HEIGHT):
 			counter += fieldnew[i][j]
-		if counter >= 6:
+		if counter >= VERTICAL_THRESHOLD:
 			verticals.append([counter, j])
+	
 	group_index = len(verticals)
 	if group_index != 1:
 		for i in range(len(verticals) - 1):
-			if abs(verticals[i + 1][1] - verticals[i][1]) < 5:
+			if abs(verticals[i + 1][1] - verticals[i][1]) < VERTICAL_THRESHOLD - 1:
 				group_index -= 1
+
+	# print verticals
+
 	return group_index
 
 
@@ -322,8 +362,8 @@ field = get_matrix(ibin)
 coords = find_rectangles(field)
 dst = make_perspective_transformation(coords, ibin, height, length)
 fieldnew = get_matrix(dst)
-lineshor = find_horizontal_lines(students, fieldnew)
-linesvert = find_vertical_lines(tasks, fieldnew)
+lineshor = find_horizontal_lines(students, fieldnew, dst)
+linesvert = find_vertical_lines(tasks, fieldnew, dst)
 massive = make_massive_with_pluses(tasks, students, lineshor, linesvert, fieldnew)
 group_index = find_out_group_index(fieldnew)
 group = make_dictionary_with_surnames(group_index)

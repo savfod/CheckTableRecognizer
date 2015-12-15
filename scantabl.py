@@ -21,10 +21,11 @@ else:
 COL_NAME_LENGTH = 180
 COL_TASK_LENGTH = 75
 COL_TASK_HEIGHT = 20
-REC_SIZE=1 #not only picture. Big value can affect on recognition
-INDENT=8 #cell indent from lines
-PLUS_THRESHOLD = 10
-BLACK_THRESHOLD=100
+REC_SIZE = 1 #not only picture. Big value can affect on recognition
+V_INDENT = 8 #COL_TASK_HEIGHT / 3 #cell indent from lines
+H_INDENT = COL_TASK_LENGTH / 5 #cell indent from lines
+PLUS_THRESHOLD = 30
+BLACK_THRESHOLD = 100
 
 def calc_sizes():
 	height = COL_TASK_HEIGHT * (students + 1)
@@ -39,7 +40,11 @@ def make_binary_image(cv, height, length):
 	rows, cols = blur.shape
 	# res = cv.resize(blur, None, fx = float(length) / cols, fy = float(height) / rows, interpolation = cv.INTER_CUBIC)
 	# TODO - appropriate resize for good black square sizes
-	ibin = cv.adaptiveThreshold(blur, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 99, 4)
+	# for i in range(1,10,1):
+	# 	for j in range(51,52):
+	# 		ibin = cv.adaptiveThreshold(blur, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, j, i)
+	# 		cv.imwrite('ibinThr'+str(j)+'_'+str(i)+'.png', ibin)
+	ibin = cv.adaptiveThreshold(blur, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 51, 5)
 	cv.imwrite('ibin.png', ibin)
 	# cv.imshow('ibin.png', ibin)
 	# cv.waitKey()
@@ -287,13 +292,14 @@ def make_massive_with_pluses(tasks, students, lineshor, linesvert, fieldnew):
 	for k in range(tasks):
 		for l in range(students):
 			counter = 0
-			for i in range(lineshor[l] + INDENT, lineshor[l + 1] - INDENT):
-				for j in range(linesvert[k] + INDENT, linesvert[k + 1] - INDENT):
+			for i in range(lineshor[l] + V_INDENT, lineshor[l + 1] - V_INDENT):
+				for j in range(linesvert[k] + H_INDENT, linesvert[k + 1] - H_INDENT):
 					counter += fieldnew[i][j]
+			# print counter
 			if counter >= PLUS_THRESHOLD:
-				massive[l][k] = "+"
+				massive[l][k] = "+" #+ str(counter)
 			else:
-				massive[l][k] = "-"
+				massive[l][k] = "-" #+ str(counter)
 	return massive
 		# roi = dst[lineshor[l] : lineshor[l + 1], linesvert[k] : linesvert[k + 1]]
 		# cv.imwrite(str("roi") + str(8 * l + k) + str(".png"), roi)
